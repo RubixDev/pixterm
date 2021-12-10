@@ -24,6 +24,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "ansipix"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "74b1c66f4c8c845b328deaaf624d4126d16e538710edbcad1cb9d7aad5bdc460"
+dependencies = [
+ "image",
+]
+
+[[package]]
 name = "atty"
 version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -305,7 +314,7 @@ dependencies = [
 name = "pixterm"
 version = "0.1.0"
 dependencies = [
- "image",
+ "ansipix",
  "structopt",
 ]
 
