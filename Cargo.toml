@@ -2,6 +2,12 @@
 name = "pixterm"
 version = "0.1.0"
 edition = "2021"
+authors = ["RubixDev"]
+license = "GPL-3.0-only"
+description = "A CLI to show images in a terminal"
+repository = "https://github.com/RubixDev/pixterm"
+keywords = ["ansi", "terminal", "pixel", "image", "cli"]
+categories = ["graphics", "command-line-utilities"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
