@@ -26,8 +26,8 @@ struct PixTerm {
     outfile: Option<PathBuf>,
 
     /// Print escape sequences literal
-    // #[structopt(short, long)]
-    // raw: bool,
+    #[structopt(short, long)]
+    raw: bool,
 
     /// Do not print to stdout. Useful with --outfile
     #[structopt(short, long)]
@@ -38,7 +38,8 @@ fn run(pixterm: PixTerm) {
     let img = ansipix::of_image(
         pixterm.file.clone(),
         (pixterm.width as usize, pixterm.height as usize),
-        pixterm.threshold
+        pixterm.threshold,
+        pixterm.raw
     ).unwrap_or_else(|_| {
         eprintln!(
             "\x1b[1;31m{}\x1b[22m could not be opened as an image. Does it exist? Is it an image?\x1b[0m",

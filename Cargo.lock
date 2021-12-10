@@ -25,9 +25,9 @@ dependencies = [
 
 [[package]]
 name = "ansipix"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "74b1c66f4c8c845b328deaaf624d4126d16e538710edbcad1cb9d7aad5bdc460"
+checksum = "b8d50ca2fb8ca11f667f3ea42f0818b3ea6c2fa340688c2c4527f0bf442b65cd"
 dependencies = [
  "image",
 ]
