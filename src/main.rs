@@ -6,7 +6,7 @@ use structopt::StructOpt;
 #[structopt(author)]
 struct PixTerm {
     /// Path to image file to display
-    #[structopt(short, long)]
+    #[structopt()]
     file: PathBuf,
 
     /// Maximum width in pixels of the resized image. Also see --height
