@@ -5,9 +5,9 @@ use structopt::StructOpt;
 #[derive(StructOpt, Debug)]
 #[structopt(author)]
 struct PixTerm {
-    /// Path to image file to display
-    #[structopt()]
-    file: PathBuf,
+    /// Path to image file(s) to display
+    #[structopt(required = true)]
+    files: Vec<PathBuf>,
 
     /// Maximum width in pixels of the resized image. Also see --height
     #[structopt(short = "W", long, default_value = "32")]
@@ -34,16 +34,16 @@ struct PixTerm {
     silent: bool,
 }
 
-fn run(pixterm: PixTerm) {
+fn run(pixterm: &PixTerm, file: &PathBuf) {
     let img = ansipix::of_image(
-        pixterm.file.clone(),
+        file.clone(),
         (pixterm.width as usize, pixterm.height as usize),
         pixterm.threshold,
         pixterm.raw
     ).unwrap_or_else(|_| {
         eprintln!(
             "\x1b[1;31m{}\x1b[22m could not be opened as an image. Does it exist? Is it an image?\x1b[0m",
-            pixterm.file.to_str().unwrap_or("The specified file")
+            file.to_str().unwrap_or("The specified file")
         );
         process::exit(1);
     });
@@ -52,7 +52,7 @@ fn run(pixterm: PixTerm) {
         println!("{}", img);
     }
     if pixterm.outfile.is_some() {
-        let outfile = pixterm.outfile.unwrap();
+        let outfile = pixterm.outfile.clone().unwrap();
         if outfile.exists() {
             eprintln!("\x1b[1;31m{}\x1b[22m already exists.\x1b[0m", outfile.to_str().unwrap_or("The specified output file"));
             process::exit(2);
@@ -70,5 +70,7 @@ fn run(pixterm: PixTerm) {
 
 fn main() {
     let pixterm = PixTerm::from_args();
-    run(pixterm);
+    for file in pixterm.files.iter() {
+        run(&pixterm, file);
+    }
 }
