@@ -1,4 +1,4 @@
-use std::{fs::File, io::Write, path::PathBuf, process};
+use std::{fs::File, io::Write, path::PathBuf};
 use structopt::StructOpt;
 
 /// A CLI tool to show images in a terminal
@@ -34,46 +34,58 @@ struct PixTerm {
     silent: bool,
 }
 
-fn run(pixterm: &PixTerm, file: &PathBuf) {
-    let img = ansipix::of_image(
+fn run(pixterm: &PixTerm, file: &PathBuf) -> Result<(), String> {
+    let img = match ansipix::of_image(
         file.clone(),
         (pixterm.width as usize, pixterm.height as usize),
         pixterm.threshold,
         pixterm.raw
-    ).unwrap_or_else(|_| {
-        eprintln!(
+    ) {
+        Ok(img) => img,
+        Err(_) => return Err(format!(
             "\x1b[1;31m{}\x1b[22m could not be opened as an image. Does it exist? Is it an image?\x1b[0m",
             file.to_str().unwrap_or("The specified file")
-        );
-        process::exit(1);
-    });
+        )),
+    };
 
     if !pixterm.silent {
         println!("{}", img);
     }
-    if pixterm.outfile.is_some() {
-        let outfile = pixterm.outfile.clone().unwrap();
+    if let Some(outfile) = &pixterm.outfile {
         if outfile.exists() {
-            eprintln!(
+            return Err(format!(
                 "\x1b[1;31m{}\x1b[22m already exists.\x1b[0m",
                 outfile.to_str().unwrap_or("The specified output file")
-            );
-            process::exit(2);
+            ));
         }
-        let mut file = File::create(outfile).unwrap_or_else(|e| {
-            eprintln!("\x1b[1;31mError while creating the file:\x1b[22m {}", e);
-            process::exit(3);
-        });
-        file.write_all(img.as_bytes()).unwrap_or_else(|e| {
-            eprintln!("\x1b[1;31mError while writing to the file:\x1b[22m {}", e);
-            process::exit(4);
-        });
+        let mut file = match File::create(outfile) {
+            Ok(file) => file,
+            Err(e) => {
+                return Err(format!(
+                    "\x1b[1;31mError while creating the file:\x1b[22m {}\x1b[0m",
+                    e
+                ))
+            }
+        };
+        match file.write_all(img.as_bytes()) {
+            Ok(_) => {}
+            Err(e) => {
+                return Err(format!(
+                    "\x1b[1;31mError while writing to the file:\x1b[22m {}\x1b[0m",
+                    e
+                ))
+            }
+        }
     }
+    Ok(())
 }
 
 fn main() {
     let pixterm = PixTerm::from_args();
     for file in pixterm.files.iter() {
-        run(&pixterm, file);
+        match run(&pixterm, file) {
+            Ok(_) => {}
+            Err(e) => eprintln!("{}", e),
+        };
     }
 }
