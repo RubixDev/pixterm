@@ -1,4 +1,4 @@
-use std::{path::PathBuf, process, fs::File, io::Write};
+use std::{fs::File, io::Write, path::PathBuf, process};
 use structopt::StructOpt;
 
 /// A CLI tool to show images in a terminal
@@ -54,7 +54,10 @@ fn run(pixterm: &PixTerm, file: &PathBuf) {
     if pixterm.outfile.is_some() {
         let outfile = pixterm.outfile.clone().unwrap();
         if outfile.exists() {
-            eprintln!("\x1b[1;31m{}\x1b[22m already exists.\x1b[0m", outfile.to_str().unwrap_or("The specified output file"));
+            eprintln!(
+                "\x1b[1;31m{}\x1b[22m already exists.\x1b[0m",
+                outfile.to_str().unwrap_or("The specified output file")
+            );
             process::exit(2);
         }
         let mut file = File::create(outfile).unwrap_or_else(|e| {
