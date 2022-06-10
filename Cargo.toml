@@ -13,4 +13,4 @@ categories = ["graphics", "command-line-utilities"]
 
 [dependencies]
 ansipix = "0.1.2"
-structopt = "0.3.25"
+clap = { version = "3.1.18", features = ["derive"] }

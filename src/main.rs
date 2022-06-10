@@ -1,40 +1,40 @@
 use std::{fs::File, io::Write, path::PathBuf};
-use structopt::StructOpt;
+use clap::Parser;
 
 /// A CLI tool to show images in a terminal
-#[derive(StructOpt, Debug)]
-#[structopt(author)]
+#[derive(Parser, Debug)]
+#[clap(author)]
 struct PixTerm {
     /// Path to image file(s) to display
-    #[structopt(required = true)]
+    #[clap(required = true)]
     files: Vec<PathBuf>,
 
     /// Maximum width in pixels of the resized image. Also see --height
-    #[structopt(short = "W", long, default_value = "32")]
+    #[clap(short = 'W', long, default_value = "32")]
     width: u16,
 
     /// Maximum height in pixels of the resized image. Also see --width
-    #[structopt(short = "H", long, default_value = "32")]
+    #[clap(short = 'H', long, default_value = "32")]
     height: u16,
 
     /// Minimum alpha value of a pixel for it to be shown
-    #[structopt(short, long, default_value = "50")]
+    #[clap(short, long, default_value = "50")]
     threshold: u8,
 
     /// File to write the resulting string into. See --raw to get literal escape sequences and --silent to suppress stdout
-    #[structopt(short, long)]
+    #[clap(short, long)]
     outfile: Option<PathBuf>,
 
     /// Print escape sequences literal
-    #[structopt(short, long)]
+    #[clap(short, long)]
     raw: bool,
 
     /// Do not print to stdout. Useful with --outfile
-    #[structopt(short, long)]
+    #[clap(short, long)]
     silent: bool,
 
     /// Print the filename above each picture
-    #[structopt(short, long)]
+    #[clap(short, long)]
     filename: bool,
 }
 
@@ -88,7 +88,7 @@ fn run(pixterm: &PixTerm, file: &PathBuf) -> Result<(), String> {
 }
 
 fn main() {
-    let pixterm = PixTerm::from_args();
+    let pixterm = PixTerm::parse();
     for file in pixterm.files.iter() {
         match run(&pixterm, file) {
             Ok(_) => {}
