@@ -32,6 +32,10 @@ struct PixTerm {
     /// Do not print to stdout. Useful with --outfile
     #[structopt(short, long)]
     silent: bool,
+
+    /// Print the filename above each picture
+    #[structopt(short, long)]
+    filename: bool,
 }
 
 fn run(pixterm: &PixTerm, file: &PathBuf) -> Result<(), String> {
@@ -48,6 +52,9 @@ fn run(pixterm: &PixTerm, file: &PathBuf) -> Result<(), String> {
         )),
     };
 
+    if pixterm.filename {
+        println!("\x1b[1m{}\x1b[0m", file.to_str().unwrap_or("Could not determine file name"));
+    }
     if !pixterm.silent {
         println!("{}", img);
     }
@@ -85,7 +92,7 @@ fn main() {
     for file in pixterm.files.iter() {
         match run(&pixterm, file) {
             Ok(_) => {}
-            Err(e) => eprintln!("{}", e),
+            Err(e) => eprintln!("{}\n", e),
         };
     }
 }
