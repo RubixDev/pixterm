@@ -39,7 +39,7 @@ struct PixTerm {
 }
 
 fn run(pixterm: &PixTerm, file: &PathBuf) -> Result<(), String> {
-    let img = match ansipix::of_image(
+    let img = match ansipix::of_image_file(
         file.clone(),
         (pixterm.width as usize, pixterm.height as usize),
         pixterm.threshold,
