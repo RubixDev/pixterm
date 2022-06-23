@@ -1,15 +1,19 @@
-use std::{fs::File, io::Write, path::PathBuf};
 use ansipix::FilterType;
-use clap::Parser;
+use clap::{Args, Parser};
+use std::{fs::File, io::Write, path::PathBuf};
 
-/// A CLI tool to show images in a terminal
 #[derive(Parser, Debug)]
-#[clap(author)]
+#[clap(author, version, about)]
 struct PixTerm {
-    /// Path to image file(s) to display
-    #[clap(required = true)]
-    files: Vec<PathBuf>,
+    /// Paths to directories and files to display
+    paths: Vec<PathBuf>,
 
+    #[clap(flatten)]
+    config: Config,
+}
+
+#[derive(Args, Debug)]
+struct Config {
     /// Maximum width in pixels of the resized image. Also see --height
     #[clap(short = 'W', long, default_value = "32")]
     width: u16,
@@ -43,13 +47,13 @@ struct PixTerm {
     aliasing: bool,
 }
 
-fn run(pixterm: &PixTerm, file: &PathBuf) -> Result<(), String> {
+fn run(config: &Config, file: &PathBuf) -> Result<(), String> {
     let img = match ansipix::of_image_file_with_filter(
         file.clone(),
-        (pixterm.width as usize, pixterm.height as usize),
-        pixterm.threshold,
-        pixterm.raw,
-        if pixterm.aliasing {
+        (config.width as usize, config.height as usize),
+        config.threshold,
+        config.raw,
+        if config.aliasing {
             FilterType::CatmullRom
         } else {
             FilterType::Nearest
@@ -62,13 +66,16 @@ fn run(pixterm: &PixTerm, file: &PathBuf) -> Result<(), String> {
         )),
     };
 
-    if pixterm.filename {
-        println!("\x1b[1m{}\x1b[0m", file.to_str().unwrap_or("Could not determine file name"));
+    if config.filename {
+        println!(
+            "\x1b[1m{}\x1b[0m",
+            file.to_str().unwrap_or("Could not determine file name")
+        );
     }
-    if !pixterm.silent {
+    if !config.silent {
         println!("{}", img);
     }
-    if let Some(outfile) = &pixterm.outfile {
+    if let Some(outfile) = &config.outfile {
         if outfile.exists() {
             return Err(format!(
                 "\x1b[1;31m{}\x1b[22m already exists.\x1b[0m",
@@ -97,12 +104,47 @@ fn run(pixterm: &PixTerm, file: &PathBuf) -> Result<(), String> {
     Ok(())
 }
 
+fn run_all(config: &Config, dir: &PathBuf) -> Result<(), String> {
+    for entry in match dir.read_dir() {
+        Ok(entries) => entries,
+        Err(e) => {
+            return Err(format!(
+                "\x1b[31mCould not read directory contents of \x1b[1m{}\x1b[22m: {e}",
+                dir.to_string_lossy()
+            ))
+        }
+    } {
+        match entry {
+            Ok(entry) => {
+                if let Err(_) = run(config, &entry.path()) {
+                    eprintln!(
+                        "\x1b[1mSkipping {file}...\x1b[0m\n",
+                        file = entry.path().to_string_lossy()
+                    );
+                }
+            }
+            Err(e) => {
+                eprintln!("\x1b[1mSkipping one file:\x1b[22m {e}\x1b[0m\n");
+            }
+        }
+    }
+    Ok(())
+}
+
 fn main() {
     let pixterm = PixTerm::parse();
-    for file in pixterm.files.iter() {
-        match run(&pixterm, file) {
-            Ok(_) => {}
-            Err(e) => eprintln!("{}\n", e),
-        };
+    let paths = &if pixterm.paths.is_empty() {
+        vec![PathBuf::from(".")]
+    } else {
+        pixterm.paths
+    };
+    for path in paths.iter() {
+        if let Err(e) = if path.is_dir() {
+            run_all(&pixterm.config, path)
+        } else {
+            run(&pixterm.config, path)
+        } {
+            eprintln!("{e}\n");
+        }
     }
 }
