@@ -1,4 +1,5 @@
 use std::{fs::File, io::Write, path::PathBuf};
+use ansipix::FilterType;
 use clap::Parser;
 
 /// A CLI tool to show images in a terminal
@@ -36,14 +37,23 @@ struct PixTerm {
     /// Print the filename above each picture
     #[clap(short, long)]
     filename: bool,
+
+    /// Use CatmullRom (cubic) iterpolation while resizing
+    #[clap(short, long)]
+    aliasing: bool,
 }
 
 fn run(pixterm: &PixTerm, file: &PathBuf) -> Result<(), String> {
-    let img = match ansipix::of_image_file(
+    let img = match ansipix::of_image_file_with_filter(
         file.clone(),
         (pixterm.width as usize, pixterm.height as usize),
         pixterm.threshold,
-        pixterm.raw
+        pixterm.raw,
+        if pixterm.aliasing {
+            FilterType::CatmullRom
+        } else {
+            FilterType::Nearest
+        },
     ) {
         Ok(img) => img,
         Err(_) => return Err(format!(
