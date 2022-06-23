@@ -1,6 +1,10 @@
 use ansipix::FilterType;
 use clap::{Args, Parser};
-use std::{fs::File, io::Write, path::PathBuf};
+use std::{
+    fs::File,
+    io::Write,
+    path::{Path, PathBuf},
+};
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about)]
@@ -47,9 +51,9 @@ struct Config {
     aliasing: bool,
 }
 
-fn run(config: &Config, file: &PathBuf) -> Result<(), String> {
+fn run(config: &Config, file: &Path) -> Result<(), String> {
     let img = match ansipix::of_image_file_with_filter(
-        file.clone(),
+        file.to_path_buf(),
         (config.width as usize, config.height as usize),
         config.threshold,
         config.raw,
@@ -104,7 +108,7 @@ fn run(config: &Config, file: &PathBuf) -> Result<(), String> {
     Ok(())
 }
 
-fn run_all(config: &Config, dir: &PathBuf) -> Result<(), String> {
+fn run_all(config: &Config, dir: &Path) -> Result<(), String> {
     for entry in match dir.read_dir() {
         Ok(entries) => entries,
         Err(e) => {
@@ -116,7 +120,7 @@ fn run_all(config: &Config, dir: &PathBuf) -> Result<(), String> {
     } {
         match entry {
             Ok(entry) => {
-                if let Err(_) = run(config, &entry.path()) {
+                if run(config, &entry.path()).is_err() {
                     eprintln!(
                         "\x1b[1mSkipping {file}...\x1b[0m\n",
                         file = entry.path().to_string_lossy()
